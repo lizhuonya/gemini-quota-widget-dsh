@@ -71,6 +71,13 @@ widget = mustReplace(
 
 widget = mustReplace(
   widget,
+  '<div class="gfw-img-wrap" id="gfw-img-wrap" title="单击猫娘弹出实时额度 / Q弹一下 · 单击气泡框切换台词 · 右键打开菜单">',
+  '<div class="gfw-img-wrap" id="gfw-img-wrap">',
+  'remove catgirl hover tooltip',
+);
+
+widget = mustReplace(
+  widget,
   "sourceLabel: valid ? 'Google 官方用量 · 30秒刷新' : '尚未取得有效官方数据',",
   "sourceLabel: valid ? (typeof sample.sourceLabel === 'string' && sample.sourceLabel ? sample.sourceLabel : '额度数据 · 自动刷新') : '尚未配置额度数据',",
   'source label',
@@ -504,11 +511,10 @@ widget = mustReplace(
   widget,
   '          <div class="gfw-min-block">\n            <div class="gfw-min-row">\n              <span class="gfw-min-label gfw-rainbow-txt">5 小时</span>\n',
   '          <div class="gfw-min-block gfw-bal-card" id="gfw-min-balance" style="${quotaView === \'balance\' ? \'\' : \'display:none\'}">\n' +
+    '            <div class="gfw-bal-chips">${balanceChipsHtml}</div>\n' +
     '            <div class="gfw-bal-hero-wrap">\n' +
-    '              <span class="gfw-bal-tag gfw-rainbow-txt">当前可用</span>\n' +
     '              <span class="gfw-bal-hero gfw-rainbow-num ${isWarnBal ? \'gfw-warn\' : \'\'}" id="gfw-val-balance">${valBalance}</span>\n' +
     '            </div>\n' +
-    '            <div class="gfw-bal-chips">${balanceChipsHtml}</div>\n' +
     '          </div>\n' +
     '          <div class="gfw-min-block" style="${quotaView === \'quota\' ? \'\' : \'display:none\'}">\n' +
     '            <div class="gfw-min-row">\n' +
@@ -959,12 +965,14 @@ companionSrc = mustReplace(
   "body.gfw-lite-mode .gfw-img-wrap, body.gfw-lite-mode .gfw-img-wrap:hover, body.gfw-lite-mode .gfw-bubble { filter: none !important; }\n" +
   "body.gfw-lite-mode .gfw-rainbow-txt, body.gfw-lite-mode .gfw-rainbow-num { animation: none !important; }\n" +
   "body.gfw-lite-mode .gfw-menu { backdrop-filter: none !important; }\n" +
-  ".gfw-bal-card { align-items: center; text-align: center; gap: calc(var(--gfw-u) * 8); }\n" +
-  ".gfw-bal-hero-wrap { display: flex; flex-direction: column; align-items: center; gap: calc(var(--gfw-u) * 2); }\n" +
-  ".gfw-bal-tag { font-size: calc(var(--gfw-u) * 28); font-weight: 700; opacity: .82; letter-spacing: .04em; }\n" +
+  "#gfw-roll-target:has(#gfw-min-balance:not([style*=\"display:none\"])) { padding-top: calc(var(--gfw-u) * 26); }\n" +
+  "#gfw-roll-target:has(#gfw-min-balance:not([style*=\"display:none\"])) .gfw-min-hdr { font-size: calc(var(--gfw-u) * 58); line-height: 1.2; margin-bottom: calc(var(--gfw-u) * 4); }\n" +
+  ".gfw-bal-card { align-items: center; text-align: center; gap: calc(var(--gfw-u) * 14); }\n" +
+  ".gfw-bal-hero-wrap { display: flex; flex-direction: column; align-items: center; gap: calc(var(--gfw-u) * 3); }\n" +
+  ".gfw-bal-tag { font-size: calc(var(--gfw-u) * 36); font-weight: 700; opacity: .88; letter-spacing: .04em; }\n" +
   ".gfw-bal-hero { font-size: calc(var(--gfw-u) * 88); font-weight: 900; line-height: 1.05; letter-spacing: -.03em; }\n" +
-  ".gfw-bal-chips { display: flex; align-items: center; justify-content: center; gap: calc(var(--gfw-u) * 8); flex-wrap: wrap; }\n" +
-  ".gfw-bal-chip { font-size: calc(var(--gfw-u) * 26); font-weight: 650; color: #5b4b8a; background: rgba(124,58,237,.08); border: 1px solid rgba(124,58,237,.18); border-radius: 999px; padding: calc(var(--gfw-u) * 4) calc(var(--gfw-u) * 14); white-space: nowrap; }\n" +
+  ".gfw-bal-chips { display: flex; align-items: center; justify-content: center; gap: calc(var(--gfw-u) * 8); flex-wrap: nowrap; max-width: 100%; }\n" +
+  ".gfw-bal-chip { font-size: calc(var(--gfw-u) * 36); font-weight: 650; color: #5b4b8a; background: rgba(124,58,237,.08); border: 1px solid rgba(124,58,237,.18); border-radius: 999px; padding: calc(var(--gfw-u) * 5) calc(var(--gfw-u) * 14); white-space: nowrap; }\n" +
   ".gfw-turn-card { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--gfw-u) * 16); text-align: center; }\n" +
   ".gfw-turn-hdr { font-size: calc(var(--gfw-u) * 52); font-weight: 700; color: #645696; line-height: 1.15; letter-spacing: .06em; }\n" +
   ".gfw-turn-cost { font-size: calc(var(--gfw-u) * 68); font-weight: 900; line-height: 1.08; letter-spacing: -.02em; white-space: nowrap; }\n" +
@@ -1376,7 +1384,7 @@ companionSrc = mustReplace(
           .replace(/(\\d+)\\s*小时\\s*(\\d+)\\s*分(?:钟)?(?:后)?/,'$1h$2m')
           .replace(/(\\d+)\\s*小时(?:后)?/,'$1h')
           .replace(/(\\d+)\\s*分(?:钟)?(?:后)?/,'$1m');
-        rst=cd?'距离重置：'+cd:'重置时间待同步';
+        rst=/^已重置/.test(cd)?cd:(cd?'距离重置：'+cd:'重置时间待同步');
       }
       const html='<div class="gfw-turn-card">'
         +'<div class="gfw-turn-hdr">本轮完成</div>'
