@@ -24,9 +24,9 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/smiththomson580-star/gemini-quota-widget.git"
+    "url": "git+https://github.com/lizhuonya/gemini-quota-widget-dsh.git"
   },
-  "homepage": "https://github.com/smiththomson580-star/gemini-quota-widget",
+  "homepage": "https://github.com/lizhuonya/gemini-quota-widget-dsh",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
