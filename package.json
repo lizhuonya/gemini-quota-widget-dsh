@@ -1,0 +1,36 @@
+{
+  "name": "dsh-gemini-quota-widget",
+  "version": "0.1.0",
+  "description": "DSH Web 界面右下角的 Gemini 猫娘额度挂件（移植自 gemini-quota-widget）：显示 5 小时 / 每周剩余额度，额度在挂件菜单里手动填写，存在 $DSH_HOME 里供网页端与桌面端共享",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "gemini",
+    "quota",
+    "widget"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "./icon.png",
+  "files": [
+    "lib",
+    "assets",
+    "build",
+    "icon.png",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smiththomson580-star/gemini-quota-widget.git"
+  },
+  "homepage": "https://github.com/smiththomson580-star/gemini-quota-widget",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}
