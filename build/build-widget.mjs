@@ -951,6 +951,9 @@ companionSrc = mustReplace(
   "#gfw-menu.gfw-menu-dragging { animation: none !important; transition: none !important; }\n" +
   "#gfw-menu .cp-content { min-height: 0; max-height: none; }\n" +
   "#gfw-panel-audio { min-height: 100%; box-sizing: border-box; }\n" +
+  ".cp-dock-custom-ctrl { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }\n" +
+  "#gfw-companion-dock.cp-dock-editable { outline: 1.5px dashed var(--cp-accent); outline-offset: 2px; cursor: grab; }\n" +
+  "#gfw-companion-dock.cp-dock-editable.cp-dock-dragging { cursor: grabbing; }\n" +
   "#gfw-bond-stage { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: var(--cp-card); border: 1px solid var(--cp-border); color: var(--cp-accent); font-size: 10px; font-weight: 600; vertical-align: middle; }\n" +
   "#gfw-menu #gfw-bond-milestones { font-size: 10px; color: var(--cp-muted, var(--cp-text)); margin-top: 3px; }\n" +
   ".cp-quota-badge { position: absolute; left: 4%; top: 8%; z-index: 4; padding: 1px 6px; border-radius: 999px; background: #fff1f2; border: 1px solid #fda4af; color: #be123c; font-size: 11px; font-weight: 700; box-shadow: 0 2px 6px rgba(190,18,60,.18); pointer-events: none; }\n" +
@@ -1019,7 +1022,7 @@ companionSrc = mustReplace(
       <button type="button" class="cp-action" data-cp-action="play"><b>\${icon('play')}</b><span>逗猫棒<small>基础 +2 · 抓星加分</small></span></button>
       <button type="button" class="cp-action" data-cp-action="sleep"><b>\${icon('sleep')}</b><span><span id="gfw-sleep-label">打个盹</span><small>随时唤醒，不扣好感</small></span></button>
     </div></div>
-    <div class="cp-card cp-switches"><label class="cp-row"><span>开启趣味互动<small>轻养成和猫猫小脾气</small></span><input id="gfw-fun-enabled" type="checkbox"></label><label class="cp-row"><span>满好感 · 柔情之舞<small>100 自动变身，跳完回到 80</small></span><input id="gfw-dance-enabled" type="checkbox"></label><label class="cp-row"><span>显示快捷互动条<small>摸头、投喂、陪玩与设置</small></span><input id="gfw-quick-dock" type="checkbox"></label><label class="cp-row"><span>双击猫猫动作<small>快速触发，不计入连戳哈气</small></span><select id="gfw-dblclick-action"><option value="none">无（仅连戳哈气）</option><option value="pet">摸摸头</option><option value="quote">来一句喵</option><option value="toggleView">切换余额/额度气泡</option></select></label></div><p class="cp-help">轻点看额度，连戳会哈气，摸头或投喂可哄好；每天首次点猫猫可恢复离线好感。好感度仅作本地趣味记录，不影响台词与额度等功能。</p>`,
+    <div class="cp-card cp-switches"><label class="cp-row"><span>开启趣味互动<small>轻养成和猫猫小脾气</small></span><input id="gfw-fun-enabled" type="checkbox"></label><label class="cp-row"><span>满好感 · 柔情之舞<small>100 自动变身，跳完回到 80</small></span><input id="gfw-dance-enabled" type="checkbox"></label><label class="cp-row"><span>显示快捷互动条<small>摸头、投喂、陪玩与设置</small></span><input id="gfw-quick-dock" type="checkbox"></label><div class="cp-row"><span>自定义互动条位置<small>开启后右键拖动摆放，关闭即记录位置</small></span><div class="cp-dock-custom-ctrl"><button type="button" class="gfw-btn-sm" id="gfw-dock-reset-pos">复位</button><input id="gfw-dock-custom-edit" type="checkbox"></div></div><label class="cp-row"><span>双击猫猫动作<small>快速触发，不计入连戳哈气</small></span><select id="gfw-dblclick-action"><option value="none">无（仅连戳哈气）</option><option value="pet">摸摸头</option><option value="quote">来一句喵</option><option value="toggleView">切换余额/额度气泡</option></select></label></div><p class="cp-help">轻点看额度，连戳会哈气，摸头或投喂可哄好；每天首次点猫猫可恢复离线好感。好感度仅作本地趣味记录，不影响台词与额度等功能。</p>`,
   'companion interaction card upgrade',
 );
 
@@ -1276,6 +1279,81 @@ companionSrc = mustReplace(
 
 companionSrc = mustReplace(
   companionSrc,
+  `  function positionDock() {
+    if (dock.hidden) return;
+    const cat = root.querySelector('#gfw-img-wrap').getBoundingClientRect();
+    const width = dock.offsetWidth || 164;
+    const height = dock.offsetHeight || 44;
+    const edge = 8;
+    const gap = 10;`,
+  `  function positionDock() {
+    if (dock.hidden) return;
+    const cat = root.querySelector('#gfw-img-wrap').getBoundingClientRect();
+    const width = dock.offsetWidth || 164;
+    const height = dock.offsetHeight || 44;
+    const edge = 8;
+    if (typeof prefs.dockRelX === 'number' && Number.isFinite(prefs.dockRelX) && typeof prefs.dockRelY === 'number' && Number.isFinite(prefs.dockRelY)) {
+      const catCx = (cat.left + cat.right) / 2;
+      const catCy = (cat.top + cat.bottom) / 2;
+      let left = catCx + prefs.dockRelX - width / 2;
+      let top = catCy + prefs.dockRelY - height / 2;
+      if (left < edge || left + width > window.innerWidth - edge) {
+        const mirrorLeft = catCx - prefs.dockRelX - width / 2;
+        if (mirrorLeft >= edge && mirrorLeft + width <= window.innerWidth - edge) left = mirrorLeft;
+      }
+      if (top < edge || top + height > window.innerHeight - edge) {
+        const mirrorTop = catCy - prefs.dockRelY - height / 2;
+        if (mirrorTop >= edge && mirrorTop + height <= window.innerHeight - edge) top = mirrorTop;
+      }
+      dock.style.left = Math.round(Math.max(edge, Math.min(window.innerWidth - width - edge, left))) + 'px';
+      dock.style.top = Math.round(Math.max(edge, Math.min(window.innerHeight - height - edge, top))) + 'px';
+      return;
+    }
+    const gap = 10;`,
+  'companion positionDock custom coords',
+);
+
+companionSrc = mustReplace(
+  companionSrc,
+  `  const dockClock=make('button','cp-clock','25:00');dockClock.type='button';dockClock.title='打开番茄钟';dockClock.setAttribute('aria-label','打开番茄钟');dockClock.addEventListener('click',()=>{openMenu();showTab('tools',true);});dock.appendChild(dockClock);document.body.appendChild(dock);`,
+  `  const dockClock=make('button','cp-clock','25:00');dockClock.type='button';dockClock.title='打开番茄钟';dockClock.setAttribute('aria-label','打开番茄钟');dockClock.addEventListener('click',()=>{openMenu();showTab('tools',true);});dock.appendChild(dockClock);document.body.appendChild(dock);
+  dock.addEventListener('contextmenu',e=>{if(prefs.dockCustomEdit){e.preventDefault();e.stopPropagation();}});
+  dock.addEventListener('mousedown',e=>{
+    if(e.button!==2||!prefs.dockCustomEdit||dock.hidden)return;
+    e.preventDefault();e.stopPropagation();
+    const rect=dock.getBoundingClientRect();
+    const startX=e.clientX,startY=e.clientY,startLeft=rect.left,startTop=rect.top;
+    let curLeft=Math.round(startLeft),curTop=Math.round(startTop);
+    dock.classList.add('cp-dock-dragging');
+    const clamp=(v,min,max)=>Math.round(Math.max(min,Math.min(max,v)));
+    const onMove=ev=>{
+      const width=dock.offsetWidth||164,height=dock.offsetHeight||44,edge=8;
+      curLeft=clamp(startLeft+ev.clientX-startX,edge,window.innerWidth-width-edge);
+      curTop=clamp(startTop+ev.clientY-startY,edge,window.innerHeight-height-edge);
+      dock.style.left=curLeft+'px';dock.style.top=curTop+'px';
+    };
+    const finish=()=>{
+      window.removeEventListener('mousemove',onMove);
+      window.removeEventListener('mouseup',finish);
+      window.removeEventListener('blur',finish);
+      dock.classList.remove('cp-dock-dragging');
+      const cat=root.querySelector('#gfw-img-wrap').getBoundingClientRect();
+      const width=dock.offsetWidth||rect.width||164,height=dock.offsetHeight||rect.height||44;
+      if(cat.width>0){
+        const dockRelX=Math.round((curLeft+width/2)-(cat.left+cat.right)/2);
+        const dockRelY=Math.round((curTop+height/2)-(cat.top+cat.bottom)/2);
+        setPreferences({dockRelX,dockRelY});
+      }
+    };
+    window.addEventListener('mousemove',onMove);
+    window.addEventListener('mouseup',finish);
+    window.addEventListener('blur',finish);
+  });`,
+  'companion dock right-click drag',
+);
+
+companionSrc = mustReplace(
+  companionSrc,
   `  function tick() {
     const result=model.tickTimer(readState());
     if(result.completed){writeState(result.state);quote(result.state.timer.phase==='focus'?'专注完成，猫猫给你盖章！\\n起来伸个懒腰吧。':'休息结束啦。\\n准备好再开始，不着急喵。');if(getConfig().turnAlertOn)playSound('task_end',getConfig().turnSoundSet,getConfig().turnVol);notify('计时完成。下一轮由你手动开始。');}
@@ -1496,7 +1574,8 @@ companionSrc = mustReplace(
     window.__gfwDshWarnBalThreshold=prefs.balanceWarnThreshold;
     root.querySelector('#gfw-img').style.opacity=String(prefs.opacity);
     root.hidden=stealthHidden;
-    dock.hidden=stealthHidden||!prefs.quickDock||!prefs.enabled;`,
+    dock.hidden=stealthHidden||!prefs.quickDock||!prefs.enabled;
+    dock.classList.toggle('cp-dock-editable',!!prefs.dockCustomEdit);`,
   'companion applyPreferences ghostHover and stealth',
 );
 
@@ -1507,7 +1586,7 @@ companionSrc = mustReplace(
     for(const [id,key] of [['gfw-fun-enabled','enabled'],['gfw-quick-dock','quickDock'],['gfw-position-locked','positionLocked'],['gfw-reduced-motion','reducedMotion'],['gfw-builtins','builtins'],['gfw-dance-enabled','danceEnabled']])$('#'+id).checked=prefs[key];`,
   `    const values={'gfw-cat-name':prefs.name,'gfw-companion-theme':prefs.theme,'gfw-cat-opacity':prefs.opacity,'gfw-quote-group':prefs.quoteGroup,'gfw-dblclick-action':prefs.dblClickAction,'gfw-custom-lines':prefs.customLines.join('\\n'),'gfw-focus-minutes':prefs.focusMinutes,'gfw-break-minutes':prefs.breakMinutes,'gfw-dsh-warn-bal':prefs.balanceWarnThreshold};
     for(const [id,value] of Object.entries(values))$('#'+id).value=value;
-    for(const [id,key] of [['gfw-fun-enabled','enabled'],['gfw-quick-dock','quickDock'],['gfw-position-locked','positionLocked'],['gfw-ghost-hover','ghostHover'],['gfw-lite-mode','liteMode'],['gfw-reduced-motion','reducedMotion'],['gfw-builtins','builtins'],['gfw-time-greet','timeGreet'],['gfw-quota-warn-speech','quotaWarnSpeech'],['gfw-dance-enabled','danceEnabled']])$('#'+id).checked=prefs[key];
+    for(const [id,key] of [['gfw-fun-enabled','enabled'],['gfw-quick-dock','quickDock'],['gfw-dock-custom-edit','dockCustomEdit'],['gfw-position-locked','positionLocked'],['gfw-ghost-hover','ghostHover'],['gfw-lite-mode','liteMode'],['gfw-reduced-motion','reducedMotion'],['gfw-builtins','builtins'],['gfw-time-greet','timeGreet'],['gfw-quota-warn-speech','quotaWarnSpeech'],['gfw-dance-enabled','danceEnabled']])$('#'+id).checked=prefs[key];
     refreshSlotButtons();`,
   'companion syncInputs new controls',
 );
@@ -1548,6 +1627,27 @@ companionSrc = mustReplace(
   `  for(const [id,key] of [['gfw-fun-enabled','enabled'],['gfw-quick-dock','quickDock'],['gfw-position-locked','positionLocked'],['gfw-reduced-motion','reducedMotion'],['gfw-builtins','builtins'],['gfw-dance-enabled','danceEnabled']])$('#'+id).addEventListener('change',e=>setPreferences({[key]:e.target.checked}));
   for(const [id,key] of [['gfw-cat-name','name'],['gfw-companion-theme','theme'],['gfw-quote-group','quoteGroup']])$('#'+id).addEventListener('change',e=>{setPreferences({[key]:e.target.value});syncInputs();});`,
   `  for(const [id,key] of [['gfw-fun-enabled','enabled'],['gfw-quick-dock','quickDock'],['gfw-position-locked','positionLocked'],['gfw-ghost-hover','ghostHover'],['gfw-lite-mode','liteMode'],['gfw-reduced-motion','reducedMotion'],['gfw-builtins','builtins'],['gfw-time-greet','timeGreet'],['gfw-quota-warn-speech','quotaWarnSpeech'],['gfw-dance-enabled','danceEnabled']])$('#'+id).addEventListener('change',e=>setPreferences({[key]:e.target.checked}));
+  $('#gfw-dock-custom-edit').addEventListener('change',e=>{
+    if(e.target.checked){
+      setPreferences({dockCustomEdit:true});
+      notify('已开启自定义位置：请右键拖动快捷互动条摆放。');
+    }else{
+      const r=dock.getBoundingClientRect();
+      const cat=root.querySelector('#gfw-img-wrap').getBoundingClientRect();
+      const patch={dockCustomEdit:false};
+      if(!dock.hidden&&r.width>0&&cat.width>0){
+        patch.dockRelX=Math.round((r.left+r.width/2)-(cat.left+cat.right)/2);
+        patch.dockRelY=Math.round((r.top+r.height/2)-(cat.top+cat.bottom)/2);
+      }
+      setPreferences(patch);
+      notify('已关闭自定义位置并记录与挂件的相对位置。');
+    }
+  });
+  $('#gfw-dock-reset-pos').addEventListener('click',()=>{
+    setPreferences({dockCustomEdit:false,dockRelX:null,dockRelY:null});
+    syncInputs();
+    notify('快捷互动条已恢复默认位置。');
+  });
   for(const [id,key] of [['gfw-cat-name','name'],['gfw-companion-theme','theme'],['gfw-quote-group','quoteGroup'],['gfw-dblclick-action','dblClickAction']])$('#'+id).addEventListener('change',e=>{setPreferences({[key]:e.target.value});syncInputs();});
   $('#gfw-dsh-warn-bal').addEventListener('change',e=>{setPreferences({balanceWarnThreshold:Number(e.target.value)});syncInputs();});
   $('#gfw-image-select').addEventListener('change',e=>applyCustomImage(e.target.value));
@@ -1785,11 +1885,11 @@ const patchModelPlugin = {
       src = src.replace(re, replacement);
       src = src.replace(
         "  theme:'lilac', opacity:1, positionLocked:false,",
-        "  theme:'lilac', opacity:1, positionLocked:false, ghostHover:false, liteMode:false, dblClickAction:'none', timeGreet:true, quotaWarnSpeech:true, balanceWarnThreshold:2,",
+        "  theme:'lilac', opacity:1, positionLocked:false, ghostHover:false, liteMode:false, dblClickAction:'none', timeGreet:true, quotaWarnSpeech:true, balanceWarnThreshold:2, dockCustomEdit:false, dockRelX:null, dockRelY:null,",
       );
       src = src.replace(
         "for(const key of ['enabled','quickDock','reducedMotion','positionLocked','builtins','danceEnabled'])if(typeof raw[key]==='boolean')p[key]=raw[key];",
-        "for(const key of ['enabled','quickDock','reducedMotion','positionLocked','ghostHover','liteMode','builtins','timeGreet','quotaWarnSpeech','danceEnabled'])if(typeof raw[key]==='boolean')p[key]=raw[key];\n  p.dblClickAction=['none','pet','quote','toggleView'].includes(raw.dblClickAction)?raw.dblClickAction:'none';\n  p.balanceWarnThreshold=Math.round(bound(raw.balanceWarnThreshold,0,10000,2)*100)/100;",
+        "for(const key of ['enabled','quickDock','dockCustomEdit','reducedMotion','positionLocked','ghostHover','liteMode','builtins','timeGreet','quotaWarnSpeech','danceEnabled'])if(typeof raw[key]==='boolean')p[key]=raw[key];\n  p.dblClickAction=['none','pet','quote','toggleView'].includes(raw.dblClickAction)?raw.dblClickAction:'none';\n  p.balanceWarnThreshold=Math.round(bound(raw.balanceWarnThreshold,0,10000,2)*100)/100;\n  if(typeof raw.dockRelX==='number'&&Number.isFinite(raw.dockRelX)&&typeof raw.dockRelY==='number'&&Number.isFinite(raw.dockRelY)){p.dockRelX=Math.round(raw.dockRelX);p.dockRelY=Math.round(raw.dockRelY);}else{p.dockRelX=null;p.dockRelY=null;}",
       );
 
       const oldStateRe = /function normalizeState\(raw=\{\},now=Date\.now\(\)\) \{[\s\S]*?return \{accepted:true,state:next,retryAfterMs:0\};\n\}/;
