@@ -86,8 +86,45 @@ widget = mustReplace(
 widget = mustReplace(
   widget,
   `<input type="number" id="gfw-scale-num" min="1" max="20" step="1" style="width:46px;text-align:center;" />`,
-  `<input type="number" id="gfw-scale-num" min="1" max="20" step="1" style="width:64px;text-align:center;" />`,
-  'widget widen scale number box to match opacity',
+  `<input type="number" id="gfw-scale-num" min="1" max="20" step="0.5" style="width:64px;text-align:center;" />`,
+  'widget widen scale number box and enable 0.5 step',
+);
+
+widget = mustReplace(
+  widget,
+  `    function scaleToNum(s) {
+      return Math.round(1 + ((s - 0.6) / (2.5 - 0.6)) * 19);
+    }
+    function numToScale(n) {
+      return Number((0.6 + ((Math.max(1, Math.min(20, n)) - 1) / 19) * (2.5 - 0.6)).toFixed(2));
+    }`,
+  `    function scaleToNum(s) {
+      return Math.round((1 + ((s - 0.6) / (2.5 - 0.6)) * 19) * 2) / 2;
+    }
+    function numToScale(n) {
+      const snapped = Math.round(Math.max(1, Math.min(20, n)) * 2) / 2;
+      return Number((0.6 + ((snapped - 1) / 19) * (2.5 - 0.6)).toFixed(2));
+    }`,
+  'widget scale half-step conversion',
+);
+
+widget = mustReplace(
+  widget,
+  `    scaleNum.addEventListener("change", () => {
+      const s = numToScale(parseInt(scaleNum.value, 10) || 10);
+      scaleRange.value = s;
+      updateScaleAnchored(s);
+      settlePosition(true);
+    });`,
+  `    scaleNum.addEventListener("change", () => {
+      const parsed = parseFloat(scaleNum.value);
+      const s = numToScale(Number.isFinite(parsed) ? parsed : 10);
+      scaleRange.value = s;
+      scaleNum.value = scaleToNum(s);
+      updateScaleAnchored(s);
+      settlePosition(true);
+    });`,
+  'widget scale number input half-step change',
 );
 
 widget = mustReplace(

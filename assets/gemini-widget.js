@@ -1971,7 +1971,7 @@ DSH \u4F59\u989D\u53EA\u5269 {bal} \u5566\uFF0C\u7701\u7740\u70B9\u95EE\u55B5\uF
         <span class="gfw-m-label">挂件大小</span>
         <div class="gfw-m-ctrl">
           <input type="range" id="gfw-scale-range" min="0.6" max="2.5" step="0.05" />
-          <input type="number" id="gfw-scale-num" min="1" max="20" step="1" style="width:64px;text-align:center;" />
+          <input type="number" id="gfw-scale-num" min="1" max="20" step="0.5" style="width:64px;text-align:center;" />
         </div>
       </div>
       <div class="gfw-m-row">
@@ -2834,10 +2834,11 @@ DSH \u4F59\u989D\u53EA\u5269 {bal} \u5566\uFF0C\u7701\u7740\u70B9\u95EE\u55B5\uF
     bindSubpanel("gfw-toggle-snap-panel", "gfw-snap-panel");
 
     function scaleToNum(s) {
-      return Math.round(1 + ((s - 0.6) / (2.5 - 0.6)) * 19);
+      return Math.round((1 + ((s - 0.6) / (2.5 - 0.6)) * 19) * 2) / 2;
     }
     function numToScale(n) {
-      return Number((0.6 + ((Math.max(1, Math.min(20, n)) - 1) / 19) * (2.5 - 0.6)).toFixed(2));
+      const snapped = Math.round(Math.max(1, Math.min(20, n)) * 2) / 2;
+      return Number((0.6 + ((snapped - 1) / 19) * (2.5 - 0.6)).toFixed(2));
     }
 
     function syncMenuInputs() {
@@ -2900,8 +2901,10 @@ DSH \u4F59\u989D\u53EA\u5269 {bal} \u5566\uFF0C\u7701\u7740\u70B9\u95EE\u55B5\uF
     scaleRange.addEventListener("change", () => settlePosition(true));
 
     scaleNum.addEventListener("change", () => {
-      const s = numToScale(parseInt(scaleNum.value, 10) || 10);
+      const parsed = parseFloat(scaleNum.value);
+      const s = numToScale(Number.isFinite(parsed) ? parsed : 10);
       scaleRange.value = s;
+      scaleNum.value = scaleToNum(s);
       updateScaleAnchored(s);
       settlePosition(true);
     });
